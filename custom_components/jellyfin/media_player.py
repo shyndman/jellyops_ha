@@ -51,8 +51,10 @@ SUPPORT_JELLYFIN = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.SEEK
-    | MediaPlayerEntityFeature.PLAY
 )
+
+SUPPORT_JELLYFIN_PLAY = SUPPORT_JELLYFIN | MediaPlayerEntityFeature.PLAY
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,7 +65,9 @@ async def async_setup_entry(
     active_jellyfin_devices: dict[str, JellyfinMediaPlayer] = {}
     inactive_jellyfin_devices: dict[str, JellyfinMediaPlayer] = {}
 
-    _jelly: JellyfinClientManager = hass.data[DOMAIN][config_entry.data.get(CONF_URL)]["manager"]
+    _jelly: JellyfinClientManager = hass.data[DOMAIN][config_entry.data.get(CONF_URL)][
+        "manager"
+    ]
     hass.data[DOMAIN][_jelly.host][PLATFORM]["entities"] = []
 
     @callback
@@ -82,7 +86,8 @@ async def async_setup_entry(
                 new_devices.append(new)
 
             elif (
-                dev_id in inactive_jellyfin_devices and _jelly.devices[dev_id].state != "Off"
+                dev_id in inactive_jellyfin_devices
+                and _jelly.devices[dev_id].state != "Off"
             ):
                 add = inactive_jellyfin_devices.pop(dev_id)
                 active_jellyfin_devices[dev_id] = add
@@ -105,6 +110,7 @@ async def async_setup_entry(
     _jelly.add_new_devices_callback(device_update_callback)
     _jelly.add_stale_devices_callback(device_removal_callback)
     _jelly.update_device_list()
+
 
 class JellyfinMediaPlayer(MediaPlayerEntity):
     """Representation of a Jellyfin device."""
@@ -158,9 +164,14 @@ class JellyfinMediaPlayer(MediaPlayerEntity):
         self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> BrowseMediaSource:
         """Implement the media source."""
-        _LOGGER.debug("-- async_browse_media: %s / %s", media_content_type, media_content_id)
+        _LOGGER.debug(
+            "-- async_browse_media: %s / %s", media_content_type, media_content_id
+        )
         return await async_library_items(
-            self.jelly_cm, media_content_type, media_content_id, user_id=self.device.user_id
+            self.jelly_cm,
+            media_content_type,
+            media_content_id,
+            user_id=self.device.user_id,
         )
 
     @property
@@ -296,9 +307,12 @@ class JellyfinMediaPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.supports_remote_control:
+        if not self.supports_remote_control:
+            return MediaPlayerEntityFeature(0)
+        # Only show PLAY button when media is loaded (not idle/off)
+        if self.state in (STATE_IDLE, STATE_OFF):
             return SUPPORT_JELLYFIN
-        return MediaPlayerEntityFeature(0)
+        return SUPPORT_JELLYFIN_PLAY
 
     async def async_media_play(self) -> None:
         """Send play command."""
