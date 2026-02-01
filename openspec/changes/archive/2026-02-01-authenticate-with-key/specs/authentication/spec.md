@@ -30,12 +30,4 @@ The config flow SHALL collect an API key from the user instead of username and p
 - **THEN** the options form displays the current API key
 - **AND** allows the user to update it
 
-## REMOVED Requirements
 
-### Requirement: Username/Password Authentication
-**Reason**: Replaced by API key authentication for improved security and simplicity.
-**Migration**: Users must reconfigure the integration with an API key from their Jellyfin server.
-
-### Requirement: Device ID Generation
-**Reason**: API key authentication does not require a device ID - the key itself identifies the client.
-**Migration**: None required - device ID was only used internally for authentication.
