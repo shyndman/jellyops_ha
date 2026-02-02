@@ -109,6 +109,8 @@ async def async_setup_entry(
 
     _jelly.add_new_devices_callback(device_update_callback)
     _jelly.add_stale_devices_callback(device_removal_callback)
+    # Immediately merge any devices already known to the manager before callbacks attached
+    device_update_callback(None)
     _jelly.update_device_list()
 
 
