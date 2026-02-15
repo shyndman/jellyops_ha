@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
-from . import JellyfinClientManager
+from .client_manager import JellyfinClientManager
 from .media_source import JellyfinSource, async_library_items
 
 from .const import (

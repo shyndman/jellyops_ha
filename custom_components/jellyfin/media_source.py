@@ -18,12 +18,10 @@ from homeassistant.const import (  # pylint: disable=import-error
     CONF_URL,
 )
 
-from . import JellyfinClientManager, autolog
-from .const import (
-    DOMAIN,
-)
+from .client_manager import JellyfinClientManager
+from .const import DOMAIN
+from .helpers import autolog
 from .view import get_proxy_image_url
-
 PLAYABLE_MEDIA_TYPES = [
     MediaType.ALBUM,
     MediaType.ARTIST,

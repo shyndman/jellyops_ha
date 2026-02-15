@@ -14,8 +14,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from . import JellyfinClientManager, autolog
+from .client_manager import JellyfinClientManager
 from .const import DOMAIN
+from .helpers import autolog
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
