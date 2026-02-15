@@ -725,7 +725,7 @@ class JellyfinClientManager:
                         self._client.start(True)
                         break
             elif event_name in ("LibraryChanged", "UserDataChanged"):
-                for sensor in self.hass.data[DOMAIN][self.host]["sensor"]["entities"]:
+            elif event_name in ("LibraryChanged", "UserDataChanged"):
                     autolog("LibraryChanged: trigger update")
                     sensor.schedule_update_ha_state(force_refresh=True)
             elif event_name == "Sessions":
@@ -734,6 +734,9 @@ class JellyfinClientManager:
                 _LOGGER.debug("Sessions (WebSocket): %s", raw)
                 self._sessions = [SessionInfoDto.model_validate(s) for s in raw]
                 self.update_device_list()
+                for sensor in self.hass.data[DOMAIN][self.host]["sensor"]["entities"]:
+                    autolog("Sessions: trigger update")
+                    sensor.schedule_update_ha_state(force_refresh=True)
             else:
                 self.callback(self._client, event_name, data)
 
@@ -994,6 +997,26 @@ class JellyfinClientManager:
         if self._sessions is None:
             return 0
         return sum(1 for s in self._sessions if s.NowPlayingItem is not None)
+
+    @property
+    def playing_sessions(self) -> list[dict[str, object]]:
+        """Active sessions with playback metadata."""
+        if self._sessions is None:
+            return []
+        sessions: list[dict[str, object]] = []
+        for session in self._sessions:
+            if session.NowPlayingItem is None:
+                continue
+            sessions.append(
+                {
+                    "username": session.UserName,
+                    "device_name": session.DeviceName,
+                    "item_name": session.NowPlayingItem.Name,
+                    "state": session.PlayState.model_dump() if session.PlayState else None,
+                }
+            )
+        return sessions
+
 
     @property
     def data(self):

@@ -217,3 +217,16 @@ class JellyfinItemCountSensor(SensorEntity):
         """Update the sensor (piggybacks on JellyfinSensor's update)."""
         pass
 
+    @property
+    def extra_state_attributes(self) -> dict[str, object] | None:
+        """Attach session metadata for playing session sensor."""
+        if self._item_type != "playing_session":
+            return None
+        sessions = self.jelly_cm.playing_sessions
+        usernames = [session.get("username") for session in sessions if session.get("username")]
+        return {
+            "sessions": sessions,
+            "usernames": usernames,
+        }
+
+
