@@ -141,7 +141,7 @@ class ConnectionMixin:
         autolog(">>>")
 
         def event(event_name: str, data: object) -> None:
-            _LOGGER.debug("Event: %s", event_name)
+            _LOGGER.debug("Event payload: %s: %s", event_name, data)
             if event_name == "WebSocketConnect":
                 self._client.wsc.send("SessionsStart", "0,1500")
             elif event_name == "WebSocketDisconnect":
