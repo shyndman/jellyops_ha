@@ -63,10 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("Cannot connect to Jellyfin server.")
         raise ConfigEntryNotReady from None
 
+    for platform in PLATFORMS:
+        hass.data[DOMAIN][config.url][platform] = {"entities": []}
+
     await manager.start()
 
     for platform in PLATFORMS:
-        hass.data[DOMAIN][config.url][platform] = {"entities": []}
         await hass.config_entries.async_forward_entry_setups(config_entry, [platform])
 
     async_dispatcher_send(hass, SIGNAL_STATE_UPDATED)
