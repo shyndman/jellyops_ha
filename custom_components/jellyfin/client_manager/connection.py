@@ -167,6 +167,12 @@ class ConnectionMixin:
                 raw = cleaned["value"]
                 _LOGGER.debug("Sessions (WebSocket): %s", raw)
                 self._sessions = [SessionInfoDto.model_validate(s) for s in raw]
+                _LOGGER.debug(
+                    "Sessions counts from WebSocket: total=%s active=%s playing=%s",
+                    len(self._sessions),
+                    self.connected_session_count,
+                    self.playing_session_count,
+                )
                 self.update_device_list()
                 for sensor in self.hass.data[DOMAIN][self.host]["sensor"]["entities"]:
                     autolog("Sessions: trigger update")
