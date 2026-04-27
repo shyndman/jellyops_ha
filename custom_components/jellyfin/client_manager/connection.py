@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import collections.abc
+import json
 import logging
 import time
 import uuid
@@ -141,7 +142,14 @@ class ConnectionMixin:
         autolog(">>>")
 
         def event(event_name: str, data: object) -> None:
-            _LOGGER.debug("Event payload: %s: %s", event_name, data)
+            _LOGGER.debug(
+                "Event payload JSON: %s",
+                json.dumps(
+                    {"event_name": event_name, "payload": data},
+                    default=str,
+                    ensure_ascii=False,
+                ),
+            )
             if event_name == "WebSocketConnect":
                 self._client.wsc.send("SessionsStart", "0,1500")
             elif event_name == "WebSocketDisconnect":
