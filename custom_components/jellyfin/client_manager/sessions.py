@@ -5,7 +5,6 @@ from __future__ import annotations
 import collections.abc
 import logging
 import traceback
-from typing import Any
 
 from ..const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from ..device import JellyfinDevice
@@ -102,11 +101,52 @@ class SessionsMixin:
             return True
         return False
 
+    @staticmethod
+    def _session_state(session: SessionInfoDto) -> str:
+        if session.NowPlayingItem is None:
+            return STATE_IDLE
+        if session.PlayState is not None and session.PlayState.IsPaused:
+            return STATE_PAUSED
+        return STATE_PLAYING
+
+    @classmethod
+    def _session_summary(cls, session: SessionInfoDto) -> dict[str, object]:
+        now_playing = session.NowPlayingItem
+        return {
+            "session_id": session.Id,
+            "username": session.UserName,
+            "user_id": session.UserId,
+            "client": session.Client,
+            "device_id": session.DeviceId,
+            "device_name": session.DeviceName,
+            "is_active": session.IsActive,
+            "playback_status": cls._session_state(session),
+            "last_activity_date": session.LastActivityDate,
+            "last_playback_check_in": session.LastPlaybackCheckIn,
+            "supports_media_control": session.SupportsMediaControl,
+            "supports_remote_control": session.SupportsRemoteControl,
+            "has_custom_device_name": session.HasCustomDeviceName,
+            "item_id": now_playing.Id if now_playing else None,
+            "item_name": now_playing.Name if now_playing else None,
+            "item_type": now_playing.Type if now_playing else None,
+            "state": session.PlayState.model_dump() if session.PlayState else None,
+        }
+
     @property
     def connected_session_count(self) -> int:
         if self._sessions is None:
             return 0
         return sum(1 for session in self._sessions if session.IsActive)
+
+    @property
+    def connected_sessions(self) -> list[dict[str, object]]:
+        if self._sessions is None:
+            return []
+        return [
+            self._session_summary(session)
+            for session in self._sessions
+            if session.IsActive
+        ]
 
     @property
     def playing_session_count(self) -> int:
@@ -118,19 +158,11 @@ class SessionsMixin:
     def playing_sessions(self) -> list[dict[str, object]]:
         if self._sessions is None:
             return []
-        sessions: list[dict[str, Any]] = []
-        for session in self._sessions:
-            if session.NowPlayingItem is None:
-                continue
-            sessions.append(
-                {
-                    "username": session.UserName,
-                    "device_name": session.DeviceName,
-                    "item_name": session.NowPlayingItem.Name,
-                    "state": session.PlayState.model_dump() if session.PlayState else None,
-                }
-            )
-        return sessions
+        return [
+            self._session_summary(session)
+            for session in self._sessions
+            if session.NowPlayingItem is not None
+        ]
 
     @property
     def devices(self) -> collections.abc.Mapping[str, JellyfinDevice]:
