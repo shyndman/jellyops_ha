@@ -1,5 +1,6 @@
 import sys
 import types
+import asyncio
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +77,7 @@ sys.path.append(str(ROOT))
 
 from custom_components.jellyfin.client_manager.sessions import SessionsMixin  # noqa: E402
 from custom_components.jellyfin.const import STATE_IDLE, STATE_PAUSED  # noqa: E402
+from custom_components.jellyfin.const import DOMAIN  # noqa: E402
 from custom_components.jellyfin.models import SessionInfoDto  # noqa: E402
 from custom_components.jellyfin.sensor import JellyfinItemCountSensor  # noqa: E402
 
@@ -232,3 +234,19 @@ def test_connected_session_sensor_exposes_connected_session_metadata():
         "sessions": _Manager.connected_sessions,
         "usernames": ["Scott"],
     }
+
+
+def test_count_sensor_registers_for_websocket_driven_updates():
+    class _Manager:
+        host = "http://jellyfin"
+
+    sensor = JellyfinItemCountSensor(_Manager(), "connected_session", lambda manager: 1)
+    sensor.hass = types.SimpleNamespace(
+        data={DOMAIN: {_Manager.host: {"sensor": {"entities": []}}}}
+    )
+
+    asyncio.run(sensor.async_added_to_hass())
+    assert sensor.hass.data[DOMAIN][_Manager.host]["sensor"]["entities"] == [sensor]
+
+    asyncio.run(sensor.async_will_remove_from_hass())
+    assert sensor.hass.data[DOMAIN][_Manager.host]["sensor"]["entities"] == []

@@ -177,6 +177,14 @@ class JellyfinItemCountSensor(SensorEntity):
         self._item_type = item_type
         self._count_getter = count_getter
 
+    async def async_added_to_hass(self) -> None:
+        autolog("<<<")
+        self.hass.data[DOMAIN][self.jelly_cm.host][PLATFORM]["entities"].append(self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        autolog("<<<")
+        self.hass.data[DOMAIN][self.jelly_cm.host][PLATFORM]["entities"].remove(self)
+
     @property
     def unique_id(self) -> str | None:
         """Return unique ID for this sensor."""
