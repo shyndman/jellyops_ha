@@ -97,9 +97,9 @@ class JellyfinSensor(Entity):
     def name(self) -> str:
         """Return the name of the device."""
         info = self.jelly_cm.info
-        if info is None:
+        if info is None or not info.ServerName:
             return DEVICE_DEFAULT_NAME
-        return f"Jellyfin {info.ServerName}" or DEVICE_DEFAULT_NAME
+        return f"Jellyfin {info.ServerName}"
 
     @property
     def should_poll(self) -> bool:

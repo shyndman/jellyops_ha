@@ -193,18 +193,21 @@ class SessionsMixin:
             self._update_callbacks.remove((callback, device))
             _LOGGER.debug("Removed update callback %s for %s", callback, device)
 
+    # These callbacks are dispatched from update_device_list(), which runs on the
+    # websocket client's thread, so they must be scheduled with the thread-safe
+    # variant. call_soon() is not safe to call from outside the event loop thread.
     def _do_new_devices_callback(self, msg: object) -> None:
         for callback in self._new_devices_callbacks:
             _LOGGER.debug("Devices callback %s", callback)
-            self._event_loop.call_soon(callback, msg)
+            self._event_loop.call_soon_threadsafe(callback, msg)
 
     def _do_stale_devices_callback(self, msg: object) -> None:
         for callback in self._stale_devices_callbacks:
             _LOGGER.debug("Stale Devices callback %s", callback)
-            self._event_loop.call_soon(callback, msg)
+            self._event_loop.call_soon_threadsafe(callback, msg)
 
     def _do_update_callback(self, msg: object) -> None:
         for callback, device in self._update_callbacks:
             if device == msg:
                 _LOGGER.debug("Update callback %s for device %s by %s", callback, device, msg)
-                self._event_loop.call_soon(callback, msg)
+                self._event_loop.call_soon_threadsafe(callback, msg)

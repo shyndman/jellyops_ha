@@ -168,7 +168,11 @@ class ConnectionMixin:
                         break
             elif event_name in ("LibraryChanged", "UserDataChanged"):
                 autolog("LibraryChanged: trigger update")
-                for sensor in self.hass.data[DOMAIN][self.host]["sensor"]["entities"]:
+                # A library change means the item counts on the server changed, so
+                # force_refresh re-runs update_data(). These events are infrequent.
+                # Snapshot the list: this callback runs on the websocket client's
+                # thread while entities are added/removed on the event loop thread.
+                for sensor in list(self.hass.data[DOMAIN][self.host]["sensor"]["entities"]):
                     sensor.schedule_update_ha_state(force_refresh=True)
             elif event_name == "Sessions":
                 cleaned = cast(_SessionsEventData, self.clean_none_dict_values(data))
@@ -182,9 +186,14 @@ class ConnectionMixin:
                     self.playing_session_count,
                 )
                 self.update_device_list()
-                for sensor in self.hass.data[DOMAIN][self.host]["sensor"]["entities"]:
-                    autolog("Sessions: trigger update")
-                    sensor.schedule_update_ha_state(force_refresh=True)
+                autolog("Sessions: trigger update")
+                # Session data is already refreshed in self._sessions above, so the
+                # sensors only need to re-publish state. Avoid force_refresh here: it
+                # would re-run update_data()'s library HTTP queries on every Sessions
+                # push (~every 1.5s). Snapshot the list for the same threading reason
+                # as the LibraryChanged branch.
+                for sensor in list(self.hass.data[DOMAIN][self.host]["sensor"]["entities"]):
+                    sensor.schedule_update_ha_state()
             else:
                 self.callback(self._client, event_name, data)
 
