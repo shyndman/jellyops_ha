@@ -14,7 +14,7 @@ All thanks and rights goes to the author of the integration.
 - Go to HACS
 - Press the three dots in the upper right corner
 - Press Custom repositories
-- In the Repository field, enter `shyndman/jellyfin_ha`
+- In the Repository field, enter `shyndman/jellyops_ha`
 - In the Category field, select `Integration`
 - Search for added integration in HACS and install it
 - Configure your Jellyfin server
