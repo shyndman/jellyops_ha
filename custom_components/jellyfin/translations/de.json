@@ -10,7 +10,7 @@
             "user_required": "Bitte wählen Sie einen Jellyfin-Benutzer aus, bevor Sie fortfahren.",
             "user_fetch_failed": "Jellyfin-Benutzer konnten nicht geladen werden. Stellen Sie sicher, dass der API-Schlüssel Benutzer verwalten darf."
         },
-        "flow_title": "Jellyfin Konfiguration",
+        "flow_title": "Jellyfin Operations Konfiguration",
         "step": {
             "user": {
                 "data": {
@@ -21,7 +21,7 @@
                     "generate_yamc": "Generiere YAMC-Daten"
                 },
                 "description": "Konfiguriere die Verbindungsdetails.",
-                "title": "Jellyfin"
+                "title": "Jellyfin Operations"
             },
             "select_user": {
                 "data": {
@@ -43,7 +43,7 @@
             "user_required": "Bitte wählen Sie einen Jellyfin-Benutzer aus, bevor Sie fortfahren.",
             "user_fetch_failed": "Jellyfin-Benutzer konnten nicht geladen werden. Stellen Sie sicher, dass der API-Schlüssel Benutzer verwalten darf."
         },
-        "flow_title": "Jellyfin Konfiguration",
+        "flow_title": "Jellyfin Operations Konfiguration",
         "step": {
             "user": {
                 "data": {
@@ -54,7 +54,7 @@
                     "generate_yamc": "Generiere YAMC-Daten"
                 },
                 "description": "Konfiguriere die Verbindungsdetails.",
-                "title": "Jellyfin"
+                "title": "Jellyfin Operations"
             },
             "select_user": {
                 "data": {
@@ -65,5 +65,5 @@
             }
         }
     },
-    "title": "Jellyfin"
+    "title": "Jellyfin Operations"
 }

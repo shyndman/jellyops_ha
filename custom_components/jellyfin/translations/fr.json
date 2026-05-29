@@ -10,7 +10,7 @@
             "user_required": "Sélectionnez un utilisateur Jellyfin avant de continuer.",
             "user_fetch_failed": "Impossible de lister les utilisateurs Jellyfin. Vérifiez que la clé API peut gérer les utilisateurs."
         },
-        "flow_title": "Jellyfin Configuration",
+        "flow_title": "Jellyfin Operations Configuration",
         "step": {
             "user": {
                 "data": {
@@ -21,7 +21,7 @@
                     "generate_yamc": "Générer les données pour la carte YAMC"
                 },
                 "description": "Configuration des paramètres de connexion.",
-                "title": "Jellyfin"
+                "title": "Jellyfin Operations"
             },
             "select_user": {
                 "data": {
@@ -43,7 +43,7 @@
             "user_required": "Sélectionnez un utilisateur Jellyfin avant de continuer.",
             "user_fetch_failed": "Impossible de lister les utilisateurs Jellyfin. Vérifiez que la clé API peut gérer les utilisateurs."
         },
-        "flow_title": "Jellyfin Configuration",
+        "flow_title": "Jellyfin Operations Configuration",
         "step": {
             "user": {
                 "data": {
@@ -54,7 +54,7 @@
                     "generate_yamc": "Générer les données pour la carte YAMC"
                 },
                 "description": "Configuration des paramètres de connexion.",
-                "title": "Jellyfin"
+                "title": "Jellyfin Operations"
             },
             "select_user": {
                 "data": {
@@ -65,5 +65,5 @@
             }
         }
     },
-    "title": "Jellyfin"
+    "title": "Jellyfin Operations"
 }

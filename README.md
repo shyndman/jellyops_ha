@@ -1,6 +1,9 @@
-# jellyfin_ha
+# Jellyfin Operations
 
-Jellyfin integration for Home Assistant
+A Home Assistant integration for Jellyfin server administrators. Where the core
+Jellyfin integration serves the media consumer, this one serves the operator:
+session/now-playing monitoring, library item counts, and management actions
+(library scans, item search, item deletion).
 
 Forked version to work with 2025.1 version of Home Assistant
 
