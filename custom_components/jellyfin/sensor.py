@@ -37,10 +37,21 @@ async def async_setup_entry(
         [
             JellyfinSensor(_jelly),
             JellyfinItemCountSensor(_jelly, "movie", lambda m: m.movie_count),
-            JellyfinItemCountSensor(_jelly, "episode", lambda m: m.episode_count),
             JellyfinItemCountSensor(_jelly, "series", lambda m: m.series_count),
+            JellyfinItemCountSensor(_jelly, "episode", lambda m: m.episode_count),
+            JellyfinItemCountSensor(_jelly, "artist", lambda m: m.artist_count),
+            JellyfinItemCountSensor(_jelly, "album", lambda m: m.album_count),
+            JellyfinItemCountSensor(_jelly, "song", lambda m: m.song_count),
+            JellyfinItemCountSensor(_jelly, "music_video", lambda m: m.music_video_count),
+            JellyfinItemCountSensor(_jelly, "box_set", lambda m: m.box_set_count),
+            JellyfinItemCountSensor(_jelly, "book", lambda m: m.book_count),
+            JellyfinItemCountSensor(_jelly, "trailer", lambda m: m.trailer_count),
+            JellyfinItemCountSensor(_jelly, "program", lambda m: m.program_count),
             JellyfinItemCountSensor(_jelly, "connected_session", lambda m: m.connected_session_count),
             JellyfinItemCountSensor(_jelly, "playing_session", lambda m: m.playing_session_count),
+            JellyfinItemCountSensor(_jelly, "transcoding_session", lambda m: m.transcoding_session_count),
+            JellyfinItemCountSensor(_jelly, "user", lambda m: m.user_count),
+            JellyfinItemCountSensor(_jelly, "device", lambda m: m.device_count),
         ],
         True,
     )
@@ -198,7 +209,8 @@ class JellyfinItemCountSensor(SensorEntity):
         """Return the name of the sensor."""
         info = self.jelly_cm.info
         server_name = info.ServerName if info else "Jellyfin"
-        return f"{server_name} {self._item_type.title()} Count"
+        label = self._item_type.replace("_", " ").title()
+        return f"{server_name} {label} Count"
 
     @property
     def native_value(self) -> int | None:
@@ -241,8 +253,10 @@ class JellyfinItemCountSensor(SensorEntity):
         """Attach session metadata for session sensors."""
         if self._item_type == "connected_session":
             return self._session_attributes(self.jelly_cm.connected_sessions)
-        if self._item_type != "playing_session":
-            return None
-        return self._session_attributes(self.jelly_cm.playing_sessions)
+        if self._item_type == "playing_session":
+            return self._session_attributes(self.jelly_cm.playing_sessions)
+        if self._item_type == "transcoding_session":
+            return self._session_attributes(self.jelly_cm.transcoding_sessions)
+        return None
 
 

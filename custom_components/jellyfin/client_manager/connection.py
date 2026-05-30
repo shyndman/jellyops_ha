@@ -169,31 +169,29 @@ class ConnectionMixin:
             elif event_name in ("LibraryChanged", "UserDataChanged"):
                 autolog("LibraryChanged: trigger update")
                 # A library change means the item counts on the server changed, so
-                # force_refresh re-runs update_data(). These events are infrequent.
-                # Snapshot the list: this callback runs on the websocket client's
-                # thread while entities are added/removed on the event loop thread.
-                for sensor in list(self.hass.data[DOMAIN][self.host]["sensor"]["entities"]):
-                    sensor.schedule_update_ha_state(force_refresh=True)
+                # force_refresh re-runs update_data() (which also refreshes the
+                # system info backing the update-available binary sensor). These
+                # events are infrequent.
+                self._refresh_entities(("sensor", "binary_sensor"), force_refresh=True)
             elif event_name == "Sessions":
                 cleaned = cast(_SessionsEventData, self.clean_none_dict_values(data))
                 raw = cleaned["value"]
                 _LOGGER.debug("Sessions (WebSocket): %s", raw)
                 self._sessions = [SessionInfoDto.model_validate(s) for s in raw]
                 _LOGGER.debug(
-                    "Sessions counts from WebSocket: total=%s active=%s playing=%s",
+                    "Sessions counts from WebSocket: total=%s active=%s playing=%s transcoding=%s",
                     len(self._sessions),
                     self.connected_session_count,
                     self.playing_session_count,
+                    self.transcoding_session_count,
                 )
                 self.update_device_list()
                 autolog("Sessions: trigger update")
                 # Session data is already refreshed in self._sessions above, so the
                 # sensors only need to re-publish state. Avoid force_refresh here: it
                 # would re-run update_data()'s library HTTP queries on every Sessions
-                # push (~every 1.5s). Snapshot the list for the same threading reason
-                # as the LibraryChanged branch.
-                for sensor in list(self.hass.data[DOMAIN][self.host]["sensor"]["entities"]):
-                    sensor.schedule_update_ha_state()
+                # push (~every 1.5s).
+                self._refresh_entities(("sensor",))
             else:
                 self.callback(self._client, event_name, data)
 
@@ -212,6 +210,29 @@ class ConnectionMixin:
         _LOGGER.debug("Sessions (initial fetch): %s", raw_sessions)
         self._sessions = [SessionInfoDto.model_validate(s) for s in raw_sessions]
         await self.update_data()
+
+    async def refresh_system_info(self) -> None:
+        """Re-fetch System/Info so derived sensors (e.g. update available) stay current."""
+        raw_info = await self.hass.async_add_executor_job(
+            self._client.jellyfin._get, "System/Info"
+        )
+        self._info = SystemInfo.model_validate(raw_info)
+
+    def _refresh_entities(
+        self, platforms: tuple[str, ...], force_refresh: bool = False
+    ) -> None:
+        """Schedule a state refresh for the given platforms' entities.
+
+        Runs on the websocket client's thread, so a snapshot of each entity
+        list is iterated to avoid racing with adds/removes on the loop thread.
+        """
+        host_data = self.hass.data[DOMAIN][self.host]
+        for platform in platforms:
+            bucket = host_data.get(platform)
+            if not bucket:
+                continue
+            for entity in list(bucket["entities"]):
+                entity.schedule_update_ha_state(force_refresh=force_refresh)
 
     async def stop(self) -> None:
         autolog("<<<")

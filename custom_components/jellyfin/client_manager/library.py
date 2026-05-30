@@ -12,6 +12,7 @@ from ..const import PLAYABLE_ITEM_TYPES, PLAYLISTS, USER_APP_NAME, YAMC_PAGE_SIZ
 from ..helpers import autolog
 from ..models import (
     BaseItemDtoQueryResult,
+    ItemCounts,
     MediaSourceInfo,
     PlaybackInfoResponse,
     UpcomingCardDefaults,
@@ -28,9 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 class LibraryMixin:
     """Mixin encapsulating Jellyfin library operations."""
 
-    _movie_count: int | None
-    _episode_count: int | None
-    _series_count: int | None
+    _item_counts: ItemCounts | None
 
     def __init__(self) -> None:
         self._data: BaseItemDtoQueryResult | None = None
@@ -40,30 +39,23 @@ class LibraryMixin:
         self._last_search = ""
         self._yamc_streams: dict[str, dict[str, str | None]] = {}
         self.thumbnail_cache: dict[str, str] = {}
-        self._movie_count = None
-        self._episode_count = None
-        self._series_count = None
+        self._item_counts = None
         super().__init__()
 
-    async def _get_item_count(self, item_type: str) -> int:
-        query = {
-            "includeItemTypes": item_type,
-            "recursive": "true",
-            "limit": 0,
-            "enableTotalRecordCount": "true",
-        }
+    async def _get_item_counts(self) -> ItemCounts:
         raw = await self.hass.async_add_executor_job(
-            self._client.jellyfin.items, "", "GET", query
+            self._client.jellyfin._get, "Items/Counts"
         )
-        result = BaseItemDtoQueryResult.model_validate(raw)
-        return result.TotalRecordCount
+        return ItemCounts.model_validate(raw)
 
     async def update_data(self) -> None:
         autolog("<<<")
         user_id = self.config.library_user_id
-        self._movie_count = await self._get_item_count("Movie")
-        self._episode_count = await self._get_item_count("Episode")
-        self._series_count = await self._get_item_count("Series")
+        # A single /Items/Counts call returns every per-type total at once,
+        # replacing the previous one-request-per-type approach.
+        self._item_counts = await self._get_item_counts()
+        await self.update_server_counts()
+        await self.refresh_system_info()
 
         if self.config.generate_upcoming:
             if not user_id:
@@ -127,15 +119,47 @@ class LibraryMixin:
 
     @property
     def movie_count(self) -> int | None:
-        return self._movie_count
-
-    @property
-    def episode_count(self) -> int | None:
-        return self._episode_count
+        return self._item_counts.MovieCount if self._item_counts else None
 
     @property
     def series_count(self) -> int | None:
-        return self._series_count
+        return self._item_counts.SeriesCount if self._item_counts else None
+
+    @property
+    def episode_count(self) -> int | None:
+        return self._item_counts.EpisodeCount if self._item_counts else None
+
+    @property
+    def artist_count(self) -> int | None:
+        return self._item_counts.ArtistCount if self._item_counts else None
+
+    @property
+    def program_count(self) -> int | None:
+        return self._item_counts.ProgramCount if self._item_counts else None
+
+    @property
+    def trailer_count(self) -> int | None:
+        return self._item_counts.TrailerCount if self._item_counts else None
+
+    @property
+    def song_count(self) -> int | None:
+        return self._item_counts.SongCount if self._item_counts else None
+
+    @property
+    def album_count(self) -> int | None:
+        return self._item_counts.AlbumCount if self._item_counts else None
+
+    @property
+    def music_video_count(self) -> int | None:
+        return self._item_counts.MusicVideoCount if self._item_counts else None
+
+    @property
+    def box_set_count(self) -> int | None:
+        return self._item_counts.BoxSetCount if self._item_counts else None
+
+    @property
+    def book_count(self) -> int | None:
+        return self._item_counts.BookCount if self._item_counts else None
 
     @property
     def data(self) -> UpcomingCardPayload | None:

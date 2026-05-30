@@ -23,7 +23,7 @@ from .view import JellyfinImageView
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "media_player"]
+PLATFORMS = ["sensor", "binary_sensor", "media_player"]
 _update_unlistener: Callable[[], None] | None = None
 
 

@@ -19,6 +19,8 @@ class SessionsMixin:
 
     def __init__(self) -> None:
         self._sessions: list[SessionInfoDto] | None = None
+        self._user_count: int | None = None
+        self._device_count: int | None = None
         self._devices: dict[str, JellyfinDevice] = {}
         self._new_devices_callbacks: list[collections.abc.Callable[[object], None]] = []
         self._stale_devices_callbacks: list[collections.abc.Callable[[object], None]] = []
@@ -163,6 +165,55 @@ class SessionsMixin:
             for session in self._sessions
             if session.NowPlayingItem is not None
         ]
+
+    @property
+    def transcoding_session_count(self) -> int:
+        if self._sessions is None:
+            return 0
+        return sum(1 for session in self._sessions if self._is_transcoding(session))
+
+    @property
+    def transcoding_sessions(self) -> list[dict[str, object]]:
+        if self._sessions is None:
+            return []
+        return [
+            self._session_summary(session)
+            for session in self._sessions
+            if self._is_transcoding(session)
+        ]
+
+    @staticmethod
+    def _is_transcoding(session: SessionInfoDto) -> bool:
+        return (
+            session.PlayState is not None
+            and session.PlayState.PlayMethod == "Transcode"
+        )
+
+    @property
+    def user_count(self) -> int | None:
+        return self._user_count
+
+    @property
+    def device_count(self) -> int | None:
+        return self._device_count
+
+    async def update_server_counts(self) -> None:
+        """Refresh server-wide user and registered-device counts."""
+        raw_users = await self.hass.async_add_executor_job(
+            self._client.jellyfin._get, "Users"
+        )
+        self._user_count = len(raw_users) if isinstance(raw_users, list) else None
+
+        raw_devices = await self.hass.async_add_executor_job(
+            self._client.jellyfin._get, "Devices"
+        )
+        if isinstance(raw_devices, dict):
+            total = raw_devices.get("TotalRecordCount")
+            self._device_count = (
+                total if total is not None else len(raw_devices.get("Items", []))
+            )
+        else:
+            self._device_count = None
 
     @property
     def devices(self) -> collections.abc.Mapping[str, JellyfinDevice]:

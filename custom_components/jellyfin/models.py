@@ -78,6 +78,25 @@ class SystemInfo(BaseModel):
     StartupWizardCompleted: bool | None = None
 
 
+class ItemCounts(BaseModel):
+    """Library item counts returned by /Items/Counts (LibrarySummary)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    MovieCount: int = 0
+    SeriesCount: int = 0
+    EpisodeCount: int = 0
+    ArtistCount: int = 0
+    ProgramCount: int = 0
+    TrailerCount: int = 0
+    SongCount: int = 0
+    AlbumCount: int = 0
+    MusicVideoCount: int = 0
+    BoxSetCount: int = 0
+    BookCount: int = 0
+    ItemCount: int = 0
+
+
 # =============================================================================
 # Session Models (WebSocket / Sessions API)
 # =============================================================================

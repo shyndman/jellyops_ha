@@ -236,6 +236,60 @@ def test_connected_session_sensor_exposes_connected_session_metadata():
     }
 
 
+def _play_state(play_method: str) -> dict:
+    return {
+        "IsPaused": False,
+        "CanSeek": True,
+        "IsMuted": False,
+        "RepeatMode": "RepeatNone",
+        "PlaybackOrder": "Default",
+        "PlayMethod": play_method,
+    }
+
+
+def test_transcoding_sessions_filter_by_play_method():
+    direct = _session(
+        Id="s-direct",
+        NowPlayingItem={"Id": "i1", "Type": "Movie", "Name": "Direct"},
+        PlayState=_play_state("DirectPlay"),
+    )
+    transcoding = _session(
+        Id="s-trans",
+        UserName="Alex",
+        NowPlayingItem={"Id": "i2", "Type": "Movie", "Name": "Trans"},
+        PlayState=_play_state("Transcode"),
+    )
+    idle = _session(Id="s-idle")  # no PlayState
+    manager = _manager_with_sessions([direct, transcoding, idle])
+
+    assert manager.transcoding_session_count == 1
+    assert [s["session_id"] for s in manager.transcoding_sessions] == ["s-trans"]
+    assert manager.transcoding_sessions[0]["username"] == "Alex"
+
+
+def test_transcoding_count_defaults_to_zero_without_sessions():
+    manager = _manager_with_sessions(None)
+
+    assert manager.transcoding_session_count == 0
+    assert manager.transcoding_sessions == []
+
+
+def test_transcoding_sensor_exposes_transcoding_metadata():
+    class _Manager:
+        transcoding_sessions = [
+            {"username": "Scott", "client": "Jellyfin Web", "device_name": "Firefox"}
+        ]
+
+    sensor = JellyfinItemCountSensor(
+        _Manager(), "transcoding_session", lambda manager: 1
+    )
+
+    assert sensor.extra_state_attributes == {
+        "sessions": _Manager.transcoding_sessions,
+        "usernames": ["Scott"],
+    }
+
+
 def test_count_sensor_registers_for_websocket_driven_updates():
     class _Manager:
         host = "http://jellyfin"
