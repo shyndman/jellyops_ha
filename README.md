@@ -18,7 +18,7 @@ All thanks and rights goes to the author of the integration.
 - In the Category field, select `Integration`
 - Search for added integration in HACS and install it
 - Configure your Jellyfin server
-- After a restart, you will have media_player and sensor entities.
+- After a restart, you will have media_player, sensor, and binary_sensor entities.
 
 ---
 
@@ -26,9 +26,38 @@ All thanks and rights goes to the author of the integration.
 
 ### Entities
 
-- 1 media_player entity per device
-- 1 sensor per server
-- Supports the "upcoming-media-card" custom card
+- 1 `media_player` entity per active device
+- 1 main `sensor` per server (online state + upcoming/YAMC card data), supporting
+  the "upcoming-media-card" custom card
+
+#### Library count sensors
+
+One sensor per item type, refreshed from a single `/Items/Counts` call when the
+library changes:
+
+- Movie, Series, Episode
+- Artist, Album, Song, Music Video
+- Box Set, Book, Trailer, Program
+
+#### Session sensors
+
+Driven live by the Jellyfin websocket, each with a `sessions` attribute listing
+the matching sessions and a `usernames` attribute:
+
+- Connected Session Count — active sessions
+- Playing Session Count — sessions with something playing
+- Transcoding Session Count — sessions the server is transcoding (the number that
+  actually loads the CPU)
+
+#### Server sensors
+
+- User Count — configured Jellyfin users
+- Device Count — registered devices
+- Update Available — a `binary_sensor` (device class `update`) that turns on when
+  the server reports an available update
+
+> Note: `Update Available` relies on Jellyfin's `HasUpdateAvailable` field, which
+> is deprecated upstream and may always report off on newer server versions.
 
 ### Media Browser
 

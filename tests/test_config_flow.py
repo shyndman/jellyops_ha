@@ -92,6 +92,7 @@ class _HandlerRegistry:
 
 config_entries_module.ConfigFlow = _ConfigFlow
 config_entries_module.OptionsFlow = _OptionsFlow
+config_entries_module.ConfigFlowResult = dict  # used only as a return-type annotation
 config_entries_module.CONN_CLASS_LOCAL_PUSH = "local_push"
 config_entries_module.HANDLERS = _HandlerRegistry()
 
